@@ -2,10 +2,35 @@ import { useState, useEffect } from 'react';
 import {
   Menu, X, Moon, Sun, ChevronDown, ChevronUp, ArrowRight,
   Heart, Gift, Rocket, Palette, Users, Globe, Check,
-  Wallet, Target, Clock, DollarSign, Send, ExternalLink, Languages
+  Wallet, Target, Clock, DollarSign, Send, ExternalLink, Languages,
+  Settings, Lock, Edit3, Trash2, Save, Plus, Eye, Image, LogOut, User
 } from 'lucide-react';
 
 type Language = 'fr' | 'en';
+
+interface Project {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  raised: number;
+  goal: number;
+  contributors: number;
+  type: 'pure' | 'reward';
+}
+
+interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  date: string;
+}
+
+interface SiteSettings {
+  logo: string | null;
+  siteName: string;
+}
 
 const translations = {
   fr: {
@@ -93,35 +118,6 @@ const translations = {
       pure: 'Don pur',
       reward: 'Récompense',
       progress: 'Progression',
-      items: [
-        {
-          name: 'EcoChain Solutions',
-          category: 'Innovation',
-          description: "Plateforme de traçabilité blockchain pour l'agriculture durable",
-          raised: 45000,
-          goal: 60000,
-          contributors: 234,
-          type: 'reward',
-        },
-        {
-          name: 'Studio Créatif MTL',
-          category: 'Culture',
-          description: "Production d'un documentaire sur l'art urbain montréalais",
-          raised: 28000,
-          goal: 35000,
-          contributors: 156,
-          type: 'pure',
-        },
-        {
-          name: 'Jardin Partagé',
-          category: 'Social',
-          description: "Création d'un jardin communautaire en zone urbaine",
-          raised: 12000,
-          goal: 15000,
-          contributors: 89,
-          type: 'pure',
-        },
-      ],
     },
     conditions: {
       title: 'Conditions pour',
@@ -208,6 +204,42 @@ const translations = {
       copyright: '© 2024 FW3 - Financement Web3. Tous droits réservés.',
     },
     launchProject: 'Lancer un projet',
+    admin: {
+      login: 'Administration',
+      password: 'Mot de passe',
+      passwordPlaceholder: 'Entrez le mot de passe',
+      loginBtn: 'Connexion',
+      logout: 'Déconnexion',
+      wrongPassword: 'Mot de passe incorrect',
+      dashboard: 'Tableau de bord',
+      projects: 'Projets',
+      contacts: 'Contacts',
+      settings: 'Paramètres',
+      addProject: 'Ajouter un projet',
+      editProject: 'Modifier le projet',
+      deleteProject: 'Supprimer le projet',
+      deleteConfirm: 'Êtes-vous sûr de vouloir supprimer ce projet ?',
+      projectName: 'Nom du projet',
+      category: 'Catégorie',
+      description: 'Description',
+      raised: 'Montant collecté',
+      goal: 'Objectif',
+      contributors: 'Contributeurs',
+      type: 'Type de don',
+      save: 'Enregistrer',
+      cancel: 'Annuler',
+      noContacts: 'Aucun contact pour le moment',
+      noProjects: 'Aucun projet pour le moment',
+      logo: 'Logo du site',
+      logoPlaceholder: 'URL du logo (optionnel)',
+      uploadLogo: 'Charger un logo',
+      removeLogo: 'Supprimer le logo',
+      siteName: 'Nom du site',
+      settingsSaved: 'Paramètres enregistrés',
+      viewContacts: 'Voir les contacts',
+      contactDate: 'Date',
+      contactMessage: 'Message',
+    },
   },
   en: {
     nav: [
@@ -294,35 +326,6 @@ const translations = {
       pure: 'Pure donation',
       reward: 'Reward',
       progress: 'Progress',
-      items: [
-        {
-          name: 'EcoChain Solutions',
-          category: 'Innovation',
-          description: 'Blockchain traceability platform for sustainable agriculture',
-          raised: 45000,
-          goal: 60000,
-          contributors: 234,
-          type: 'reward',
-        },
-        {
-          name: 'Creative Studio MTL',
-          category: 'Culture',
-          description: 'Documentary production on Montreal urban art',
-          raised: 28000,
-          goal: 35000,
-          contributors: 156,
-          type: 'pure',
-        },
-        {
-          name: 'Shared Garden',
-          category: 'Social',
-          description: 'Creation of a community garden in urban areas',
-          raised: 12000,
-          goal: 15000,
-          contributors: 89,
-          type: 'pure',
-        },
-      ],
     },
     conditions: {
       title: 'Conditions for',
@@ -409,8 +412,79 @@ const translations = {
       copyright: '© 2024 FW3 - Web3 Funding. All rights reserved.',
     },
     launchProject: 'Launch a project',
+    admin: {
+      login: 'Administration',
+      password: 'Password',
+      passwordPlaceholder: 'Enter password',
+      loginBtn: 'Login',
+      logout: 'Logout',
+      wrongPassword: 'Incorrect password',
+      dashboard: 'Dashboard',
+      projects: 'Projects',
+      contacts: 'Contacts',
+      settings: 'Settings',
+      addProject: 'Add project',
+      editProject: 'Edit project',
+      deleteProject: 'Delete project',
+      deleteConfirm: 'Are you sure you want to delete this project?',
+      projectName: 'Project name',
+      category: 'Category',
+      description: 'Description',
+      raised: 'Amount raised',
+      goal: 'Goal',
+      contributors: 'Contributors',
+      type: 'Donation type',
+      save: 'Save',
+      cancel: 'Cancel',
+      noContacts: 'No contacts yet',
+      noProjects: 'No projects yet',
+      logo: 'Site logo',
+      logoPlaceholder: 'Logo URL (optional)',
+      uploadLogo: 'Upload logo',
+      removeLogo: 'Remove logo',
+      siteName: 'Site name',
+      settingsSaved: 'Settings saved',
+      viewContacts: 'View contacts',
+      contactDate: 'Date',
+      contactMessage: 'Message',
+    },
   },
 };
+
+const defaultProjects: Project[] = [
+  {
+    id: '1',
+    name: 'EcoChain Solutions',
+    category: 'Innovation',
+    description: "Plateforme de traçabilité blockchain pour l'agriculture durable",
+    raised: 45000,
+    goal: 60000,
+    contributors: 234,
+    type: 'reward',
+  },
+  {
+    id: '2',
+    name: 'Studio Créatif MTL',
+    category: 'Culture',
+    description: "Production d'un documentaire sur l'art urbain montréalais",
+    raised: 28000,
+    goal: 35000,
+    contributors: 156,
+    type: 'pure',
+  },
+  {
+    id: '3',
+    name: 'Jardin Partagé',
+    category: 'Social',
+    description: "Création d'un jardin communautaire en zone urbaine",
+    raised: 12000,
+    goal: 15000,
+    contributors: 89,
+    type: 'pure',
+  },
+];
+
+const ADMIN_PASSWORD = 'fw3admin2024';
 
 export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -421,7 +495,53 @@ export default function App() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [formSubmitted, setFormSubmitted] = useState(false);
 
+  // Admin state
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminTab, setAdminTab] = useState<'projects' | 'contacts' | 'settings'>('projects');
+  const [loginError, setLoginError] = useState(false);
+
+  // Data state
+  const [projects, setProjects] = useState<Project[]>(() => {
+    const saved = localStorage.getItem('fw3-projects');
+    return saved ? JSON.parse(saved) : defaultProjects;
+  });
+  const [contacts, setContacts] = useState<ContactSubmission[]>(() => {
+    const saved = localStorage.getItem('fw3-contacts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
+    const saved = localStorage.getItem('fw3-settings');
+    return saved ? JSON.parse(saved) : { logo: null, siteName: 'FW3' };
+  });
+
+  // Edit state
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projectForm, setProjectForm] = useState<Omit<Project, 'id'>>({
+    name: '',
+    category: 'Innovation',
+    description: '',
+    raised: 0,
+    goal: 0,
+    contributors: 0,
+    type: 'reward',
+  });
+
   const t = translations[language];
+
+  useEffect(() => {
+    localStorage.setItem('fw3-projects', JSON.stringify(projects));
+  }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem('fw3-contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  useEffect(() => {
+    localStorage.setItem('fw3-settings', JSON.stringify(siteSettings));
+  }, [siteSettings]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -444,32 +564,80 @@ export default function App() {
 
   const toggleLanguage = () => {
     setLanguage(language === 'fr' ? 'en' : 'fr');
-    setActiveFilter(language === 'fr' ? 'all' : 'Tous');
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+      setShowAdminLogin(false);
+      setAdminPassword('');
+      setLoginError(false);
+    } else {
+      setLoginError(true);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    setAdminTab('projects');
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newContact: ContactSubmission = {
+      id: Date.now().toString(),
+      ...formData,
+      date: new Date().toISOString(),
+    };
+    setContacts([newContact, ...contacts]);
     setFormSubmitted(true);
     setFormData({ name: '', email: '', message: '' });
     setTimeout(() => setFormSubmitted(false), 3000);
   };
 
-  const filterKey = language === 'fr' ? activeFilter : 
-    activeFilter === 'Tous' ? 'all' : 
-    activeFilter === 'All' ? 'Tous' : activeFilter;
-
-  const getCategoryFilter = (cat: string) => {
-    if (language === 'en') {
-      if (cat === 'Innovation') return 'Innovation';
-      if (cat === 'Culture') return 'Culture';
-      if (cat === 'Social') return 'Social';
+  const handleProjectSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingProject) {
+      setProjects(projects.map(p => p.id === editingProject.id ? { ...projectForm, id: editingProject.id } : p));
+    } else {
+      setProjects([...projects, { ...projectForm, id: Date.now().toString() }]);
     }
-    return cat;
+    setShowProjectForm(false);
+    setEditingProject(null);
+    setProjectForm({ name: '', category: 'Innovation', description: '', raised: 0, goal: 0, contributors: 0, type: 'reward' });
   };
 
-  const filteredProjects = filterKey === 'Tous' || filterKey === 'all'
-    ? t.projects.items
-    : t.projects.items.filter(p => getCategoryFilter(p.category) === filterKey);
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setProjectForm({
+      name: project.name,
+      category: project.category,
+      description: project.description,
+      raised: project.raised,
+      goal: project.goal,
+      contributors: project.contributors,
+      type: project.type,
+    });
+    setShowProjectForm(true);
+  };
+
+  const handleDeleteProject = (id: string) => {
+    if (confirm(t.admin.deleteConfirm)) {
+      setProjects(projects.filter(p => p.id !== id));
+    }
+  };
+
+  const handleSettingsSave = () => {
+    localStorage.setItem('fw3-settings', JSON.stringify(siteSettings));
+  };
+
+  const filterKey = language === 'en' ? 
+    (activeFilter === 'Tous' ? 'all' : activeFilter) : 
+    (activeFilter === 'All' ? 'all' : activeFilter);
+
+  const filteredProjects = filterKey === 'all' || activeFilter === 'Tous' || activeFilter === 'All'
+    ? projects
+    : projects.filter(p => p.category === activeFilter);
 
   return (
     <div className="min-h-screen">
@@ -478,10 +646,14 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             <a href="#hero" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
-                <Globe className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight">FW3</span>
+              {siteSettings.logo ? (
+                <img src={siteSettings.logo} alt="Logo" className="w-10 h-10 rounded-xl object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <span className="text-xl font-bold tracking-tight">{siteSettings.siteName}</span>
             </a>
 
             <nav className="hidden lg:flex items-center gap-8">
@@ -512,6 +684,15 @@ export default function App() {
               >
                 {isDark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
               </button>
+              {!isAdmin && (
+                <button
+                  onClick={() => setShowAdminLogin(true)}
+                  className="p-2 rounded-xl hover:bg-white/5 transition-colors"
+                  aria-label="Admin"
+                >
+                  <Lock className="w-5 h-5" />
+                </button>
+              )}
               <a
                 href="#contact"
                 className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white font-medium text-sm hover:opacity-90 transition-opacity"
@@ -555,6 +736,315 @@ export default function App() {
           </div>
         )}
       </header>
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && !isAdmin && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="glass rounded-3xl p-8 w-full max-w-md mx-4 animate-fade-in-up">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">{t.admin.login}</h2>
+              <button onClick={() => { setShowAdminLogin(false); setLoginError(false); }}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleAdminLogin(); }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">{t.admin.password}</label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                  placeholder={t.admin.passwordPlaceholder}
+                />
+              </div>
+              {loginError && (
+                <p className="text-red-400 text-sm">{t.admin.wrongPassword}</p>
+              )}
+              <button
+                type="submit"
+                className="w-full px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+              >
+                {t.admin.loginBtn}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Panel */}
+      {isAdmin && (
+        <div className="fixed inset-0 z-[100] bg-[var(--bg)] overflow-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-2xl font-bold">{t.admin.dashboard}</h1>
+              <button
+                onClick={handleAdminLogout}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                {t.admin.logout}
+              </button>
+            </div>
+
+            {/* Admin Tabs */}
+            <div className="flex gap-2 mb-8">
+              {(['projects', 'contacts', 'settings'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setAdminTab(tab)}
+                  className={`px-5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    adminTab === tab
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'glass hover:bg-white/10'
+                  }`}
+                >
+                  {t.admin[tab]}
+                </button>
+              ))}
+            </div>
+
+            {/* Projects Tab */}
+            {adminTab === 'projects' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">{t.admin.projects}</h2>
+                  <button
+                    onClick={() => {
+                      setEditingProject(null);
+                      setProjectForm({ name: '', category: 'Innovation', description: '', raised: 0, goal: 0, contributors: 0, type: 'reward' });
+                      setShowProjectForm(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t.admin.addProject}
+                  </button>
+                </div>
+
+                {showProjectForm && (
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold mb-4">
+                      {editingProject ? t.admin.editProject : t.admin.addProject}
+                    </h3>
+                    <form onSubmit={handleProjectSubmit} className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.projectName}</label>
+                        <input
+                          type="text"
+                          required
+                          value={projectForm.name}
+                          onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.category}</label>
+                        <select
+                          value={projectForm.category}
+                          onChange={(e) => setProjectForm({ ...projectForm, category: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        >
+                          <option value="Innovation">Innovation</option>
+                          <option value="Culture">Culture</option>
+                          <option value="Social">Social</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-2">{t.admin.description}</label>
+                        <textarea
+                          required
+                          rows={3}
+                          value={projectForm.description}
+                          onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.raised}</label>
+                        <input
+                          type="number"
+                          required
+                          value={projectForm.raised}
+                          onChange={(e) => setProjectForm({ ...projectForm, raised: Number(e.target.value) })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.goal}</label>
+                        <input
+                          type="number"
+                          required
+                          value={projectForm.goal}
+                          onChange={(e) => setProjectForm({ ...projectForm, goal: Number(e.target.value) })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.contributors}</label>
+                        <input
+                          type="number"
+                          required
+                          value={projectForm.contributors}
+                          onChange={(e) => setProjectForm({ ...projectForm, contributors: Number(e.target.value) })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.type}</label>
+                        <select
+                          value={projectForm.type}
+                          onChange={(e) => setProjectForm({ ...projectForm, type: e.target.value as 'pure' | 'reward' })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        >
+                          <option value="pure">{t.projects.pure}</option>
+                          <option value="reward">{t.projects.reward}</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2 flex gap-3">
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                        >
+                          <Save className="w-4 h-4" />
+                          {t.admin.save}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowProjectForm(false); setEditingProject(null); }}
+                          className="px-6 py-3 rounded-xl glass hover:bg-white/10 transition-all"
+                        >
+                          {t.admin.cancel}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {projects.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 text-center text-[var(--muted)]">
+                    {t.admin.noProjects}
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {projects.map((project) => (
+                      <div key={project.id} className="glass rounded-2xl p-6 flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="font-semibold">{project.name}</h3>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              project.type === 'pure' ? 'bg-pink-500/10 text-pink-400' : 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                            }`}>
+                              {project.type === 'pure' ? t.projects.pure : t.projects.reward}
+                            </span>
+                            <span className="text-xs text-[var(--muted)]">{project.category}</span>
+                          </div>
+                          <p className="text-sm text-[var(--muted)] mb-2">{project.description}</p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span>${project.raised.toLocaleString()} / ${project.goal.toLocaleString()}</span>
+                            <span className="flex items-center gap-1 text-[var(--muted)]">
+                              <Users className="w-4 h-4" />
+                              {project.contributors}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleEditProject(project)}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+                          >
+                            <Edit3 className="w-5 h-5 text-[var(--accent)]" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5 text-red-400" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Contacts Tab */}
+            {adminTab === 'contacts' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold">{t.admin.contacts}</h2>
+                {contacts.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 text-center text-[var(--muted)]">
+                    {t.admin.noContacts}
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {contacts.map((contact) => (
+                      <div key={contact.id} className="glass rounded-2xl p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold">{contact.name}</h3>
+                            <a href={`mailto:${contact.email}`} className="text-sm text-[var(--accent)] hover:underline">
+                              {contact.email}
+                            </a>
+                          </div>
+                          <span className="text-xs text-[var(--muted)]">
+                            {new Date(contact.date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--muted)]">{contact.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {adminTab === 'settings' && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold">{t.admin.settings}</h2>
+                <div className="glass rounded-2xl p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t.admin.siteName}</label>
+                    <input
+                      type="text"
+                      value={siteSettings.siteName}
+                      onChange={(e) => setSiteSettings({ ...siteSettings, siteName: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t.admin.logo}</label>
+                    <div className="flex items-center gap-4">
+                      {siteSettings.logo && (
+                        <img src={siteSettings.logo} alt="Logo" className="w-16 h-16 rounded-xl object-cover" />
+                      )}
+                      <input
+                        type="text"
+                        value={siteSettings.logo || ''}
+                        onChange={(e) => setSiteSettings({ ...siteSettings, logo: e.target.value || null })}
+                        className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                        placeholder={t.admin.logoPlaceholder}
+                      />
+                    </div>
+                    <p className="text-xs text-[var(--muted)] mt-2">
+                      {language === 'fr' ? 'Entrez une URL d\'image (ex: https://example.com/logo.png)' : 'Enter an image URL (e.g., https://example.com/logo.png)'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSettingsSave}
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                  >
+                    <Save className="w-4 h-4" />
+                    {t.admin.save}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center pt-20">
@@ -733,53 +1223,59 @@ export default function App() {
           </div>
 
           {/* Projects Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project, i) => (
-              <div
-                key={i}
-                className="glass rounded-3xl p-6 hover:scale-[1.02] transition-all duration-300 animate-fade-in-up"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    project.type === 'pure' 
-                      ? 'bg-pink-500/10 text-pink-400' 
-                      : 'bg-[var(--accent)]/10 text-[var(--accent)]'
-                  }`}>
-                    {project.type === 'pure' ? t.projects.pure : t.projects.reward}
-                  </span>
-                  <span className="text-xs text-[var(--muted)]">{project.category}</span>
+          {filteredProjects.length === 0 ? (
+            <div className="glass rounded-2xl p-8 text-center text-[var(--muted)]">
+              {t.admin.noProjects}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project, i) => (
+                <div
+                  key={project.id}
+                  className="glass rounded-3xl p-6 hover:scale-[1.02] transition-all duration-300 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      project.type === 'pure' 
+                        ? 'bg-pink-500/10 text-pink-400' 
+                        : 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                    }`}>
+                      {project.type === 'pure' ? t.projects.pure : t.projects.reward}
+                    </span>
+                    <span className="text-xs text-[var(--muted)]">{project.category}</span>
+                  </div>
+                  
+                  <h3 className="text-lg font-bold mb-2">{project.name}</h3>
+                  <p className="text-sm text-[var(--muted)] mb-4">{project.description}</p>
+                  
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-[var(--muted)]">{t.projects.progress}</span>
+                      <span className="font-medium">{Math.round((project.raised / project.goal) * 100)}%</span>
+                    </div>
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] rounded-full"
+                        style={{ width: `${Math.min((project.raised / project.goal) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <span className="font-bold">${project.raised.toLocaleString()}</span>
+                      <span className="text-[var(--muted)]"> / ${project.goal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[var(--muted)]">
+                      <Users className="w-4 h-4" />
+                      <span>{project.contributors}</span>
+                    </div>
+                  </div>
                 </div>
-                
-                <h3 className="text-lg font-bold mb-2">{project.name}</h3>
-                <p className="text-sm text-[var(--muted)] mb-4">{project.description}</p>
-                
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-[var(--muted)]">{t.projects.progress}</span>
-                    <span className="font-medium">{Math.round((project.raised / project.goal) * 100)}%</span>
-                  </div>
-                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] rounded-full"
-                      style={{ width: `${(project.raised / project.goal) * 100}%` }}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <div>
-                    <span className="font-bold">${project.raised.toLocaleString()}</span>
-                    <span className="text-[var(--muted)]"> / ${project.goal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[var(--muted)]">
-                    <Users className="w-4 h-4" />
-                    <span>{project.contributors}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -961,10 +1457,14 @@ export default function App() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">FW3</span>
+                {siteSettings.logo ? (
+                  <img src={siteSettings.logo} alt="Logo" className="w-10 h-10 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <span className="text-xl font-bold">{siteSettings.siteName}</span>
               </div>
               <p className="text-sm text-[var(--muted)]">
                 {t.footer.description}
