@@ -3,7 +3,7 @@ import {
   Menu, X, Moon, Sun, ChevronDown, ChevronUp, ArrowRight,
   Heart, Gift, Rocket, Palette, Users, Globe, Check,
   Wallet, Target, Clock, DollarSign, Send, ExternalLink, Languages,
-  Settings, Lock, Edit3, Trash2, Save, Plus, Eye, Image, LogOut, User
+  Settings, Lock, Edit3, Trash2, Save, Plus, Eye, Image, LogOut, User, Link, Handshake
 } from 'lucide-react';
 
 type Language = 'fr' | 'en';
@@ -27,6 +27,13 @@ interface ContactSubmission {
   date: string;
 }
 
+interface Partner {
+  id: string;
+  name: string;
+  logo: string;
+  url?: string;
+}
+
 interface SiteSettings {
   logo: string | null;
   siteName: string;
@@ -39,6 +46,7 @@ const translations = {
       { name: 'Solutions', href: '#solutions' },
       { name: 'Secteurs', href: '#sectors' },
       { name: 'Projets', href: '#projects' },
+      { name: 'Partenaires', href: '#partners' },
       { name: 'Conditions', href: '#conditions' },
       { name: 'Contact', href: '#contact' },
     ],
@@ -118,6 +126,12 @@ const translations = {
       pure: 'Don pur',
       reward: 'Récompense',
       progress: 'Progression',
+    },
+    partners: {
+      title: 'Nos',
+      titleHighlight: 'partenaires',
+      subtitle: 'Ils soutiennent FW3 et contribuent au succès des projets',
+      becomePartner: 'Devenir partenaire',
     },
     conditions: {
       title: 'Conditions pour',
@@ -214,11 +228,13 @@ const translations = {
       dashboard: 'Tableau de bord',
       projects: 'Projets',
       contacts: 'Contacts',
+      partners: 'Partenaires',
       settings: 'Paramètres',
       addProject: 'Ajouter un projet',
       editProject: 'Modifier le projet',
       deleteProject: 'Supprimer le projet',
       deleteConfirm: 'Êtes-vous sûr de vouloir supprimer ce projet ?',
+      deletePartnerConfirm: 'Êtes-vous sûr de vouloir supprimer ce partenaire ?',
       projectName: 'Nom du projet',
       category: 'Catégorie',
       description: 'Description',
@@ -230,6 +246,7 @@ const translations = {
       cancel: 'Annuler',
       noContacts: 'Aucun contact pour le moment',
       noProjects: 'Aucun projet pour le moment',
+      noPartners: 'Aucun partenaire pour le moment',
       logo: 'Logo du site',
       logoPlaceholder: 'URL du logo (optionnel)',
       uploadLogo: 'Charger un logo',
@@ -239,6 +256,14 @@ const translations = {
       viewContacts: 'Voir les contacts',
       contactDate: 'Date',
       contactMessage: 'Message',
+      addPartner: 'Ajouter un partenaire',
+      editPartner: 'Modifier le partenaire',
+      partnerName: 'Nom du partenaire',
+      partnerLogo: 'Logo (URL)',
+      partnerUrl: 'Site web (URL optionnelle)',
+      partnerNamePlaceholder: 'Nom du partenaire',
+      partnerLogoPlaceholder: 'https://example.com/logo.png',
+      partnerUrlPlaceholder: 'https://example.com (optionnel)',
     },
   },
   en: {
@@ -247,6 +272,7 @@ const translations = {
       { name: 'Solutions', href: '#solutions' },
       { name: 'Sectors', href: '#sectors' },
       { name: 'Projects', href: '#projects' },
+      { name: 'Partners', href: '#partners' },
       { name: 'Conditions', href: '#conditions' },
       { name: 'Contact', href: '#contact' },
     ],
@@ -326,6 +352,12 @@ const translations = {
       pure: 'Pure donation',
       reward: 'Reward',
       progress: 'Progress',
+    },
+    partners: {
+      title: 'Our',
+      titleHighlight: 'partners',
+      subtitle: 'They support FW3 and contribute to project success',
+      becomePartner: 'Become a partner',
     },
     conditions: {
       title: 'Conditions for',
@@ -422,11 +454,13 @@ const translations = {
       dashboard: 'Dashboard',
       projects: 'Projects',
       contacts: 'Contacts',
+      partners: 'Partners',
       settings: 'Settings',
       addProject: 'Add project',
       editProject: 'Edit project',
       deleteProject: 'Delete project',
       deleteConfirm: 'Are you sure you want to delete this project?',
+      deletePartnerConfirm: 'Are you sure you want to delete this partner?',
       projectName: 'Project name',
       category: 'Category',
       description: 'Description',
@@ -438,6 +472,7 @@ const translations = {
       cancel: 'Cancel',
       noContacts: 'No contacts yet',
       noProjects: 'No projects yet',
+      noPartners: 'No partners yet',
       logo: 'Site logo',
       logoPlaceholder: 'Logo URL (optional)',
       uploadLogo: 'Upload logo',
@@ -447,6 +482,14 @@ const translations = {
       viewContacts: 'View contacts',
       contactDate: 'Date',
       contactMessage: 'Message',
+      addPartner: 'Add partner',
+      editPartner: 'Edit partner',
+      partnerName: 'Partner name',
+      partnerLogo: 'Logo (URL)',
+      partnerUrl: 'Website (URL optional)',
+      partnerNamePlaceholder: 'Partner name',
+      partnerLogoPlaceholder: 'https://example.com/logo.png',
+      partnerUrlPlaceholder: 'https://example.com (optional)',
     },
   },
 };
@@ -499,7 +542,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminTab, setAdminTab] = useState<'projects' | 'contacts' | 'settings'>('projects');
+  const [adminTab, setAdminTab] = useState<'projects' | 'contacts' | 'partners' | 'settings'>('projects');
   const [loginError, setLoginError] = useState(false);
 
   // Data state
@@ -509,6 +552,10 @@ export default function App() {
   });
   const [contacts, setContacts] = useState<ContactSubmission[]>(() => {
     const saved = localStorage.getItem('fw3-contacts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [partners, setPartners] = useState<Partner[]>(() => {
+    const saved = localStorage.getItem('fw3-partners');
     return saved ? JSON.parse(saved) : [];
   });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
@@ -529,6 +576,15 @@ export default function App() {
     type: 'reward',
   });
 
+  // Partner edit state
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [showPartnerForm, setShowPartnerForm] = useState(false);
+  const [partnerForm, setPartnerForm] = useState<Omit<Partner, 'id'>>({
+    name: '',
+    logo: '',
+    url: '',
+  });
+
   const t = translations[language];
 
   useEffect(() => {
@@ -538,6 +594,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('fw3-contacts', JSON.stringify(contacts));
   }, [contacts]);
+
+  useEffect(() => {
+    localStorage.setItem('fw3-partners', JSON.stringify(partners));
+  }, [partners]);
 
   useEffect(() => {
     localStorage.setItem('fw3-settings', JSON.stringify(siteSettings));
@@ -624,6 +684,34 @@ export default function App() {
   const handleDeleteProject = (id: string) => {
     if (confirm(t.admin.deleteConfirm)) {
       setProjects(projects.filter(p => p.id !== id));
+    }
+  };
+
+  const handlePartnerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingPartner) {
+      setPartners(partners.map(p => p.id === editingPartner.id ? { ...partnerForm, id: editingPartner.id } : p));
+    } else {
+      setPartners([...partners, { ...partnerForm, id: Date.now().toString() }]);
+    }
+    setShowPartnerForm(false);
+    setEditingPartner(null);
+    setPartnerForm({ name: '', logo: '', url: '' });
+  };
+
+  const handleEditPartner = (partner: Partner) => {
+    setEditingPartner(partner);
+    setPartnerForm({
+      name: partner.name,
+      logo: partner.logo,
+      url: partner.url || '',
+    });
+    setShowPartnerForm(true);
+  };
+
+  const handleDeletePartner = (id: string) => {
+    if (confirm(t.admin.deletePartnerConfirm)) {
+      setPartners(partners.filter(p => p.id !== id));
     }
   };
 
@@ -788,8 +876,8 @@ export default function App() {
             </div>
 
             {/* Admin Tabs */}
-            <div className="flex gap-2 mb-8">
-              {(['projects', 'contacts', 'settings'] as const).map((tab) => (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {(['projects', 'contacts', 'partners', 'settings'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setAdminTab(tab)}
@@ -928,9 +1016,9 @@ export default function App() {
                 ) : (
                   <div className="grid gap-4">
                     {projects.map((project) => (
-                      <div key={project.id} className="glass rounded-2xl p-6 flex items-center justify-between">
+                      <div key={project.id} className="glass rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
                             <h3 className="font-semibold">{project.name}</h3>
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               project.type === 'pure' ? 'bg-pink-500/10 text-pink-400' : 'bg-[var(--accent)]/10 text-[var(--accent)]'
@@ -940,7 +1028,7 @@ export default function App() {
                             <span className="text-xs text-[var(--muted)]">{project.category}</span>
                           </div>
                           <p className="text-sm text-[var(--muted)] mb-2">{project.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-4 text-sm flex-wrap">
                             <span>${project.raised.toLocaleString()} / ${project.goal.toLocaleString()}</span>
                             <span className="flex items-center gap-1 text-[var(--muted)]">
                               <Users className="w-4 h-4" />
@@ -981,7 +1069,7 @@ export default function App() {
                   <div className="grid gap-4">
                     {contacts.map((contact) => (
                       <div key={contact.id} className="glass rounded-2xl p-6">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
                           <div>
                             <h3 className="font-semibold">{contact.name}</h3>
                             <a href={`mailto:${contact.email}`} className="text-sm text-[var(--accent)] hover:underline">
@@ -993,6 +1081,131 @@ export default function App() {
                           </span>
                         </div>
                         <p className="text-sm text-[var(--muted)]">{contact.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Partners Tab */}
+            {adminTab === 'partners' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">{t.admin.partners}</h2>
+                  <button
+                    onClick={() => {
+                      setEditingPartner(null);
+                      setPartnerForm({ name: '', logo: '', url: '' });
+                      setShowPartnerForm(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] text-white font-medium hover:opacity-90 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t.admin.addPartner}
+                  </button>
+                </div>
+
+                {showPartnerForm && (
+                  <div className="glass rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold mb-4">
+                      {editingPartner ? t.admin.editPartner : t.admin.addPartner}
+                    </h3>
+                    <form onSubmit={handlePartnerSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.partnerName}</label>
+                        <input
+                          type="text"
+                          required
+                          value={partnerForm.name}
+                          onChange={(e) => setPartnerForm({ ...partnerForm, name: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                          placeholder={t.admin.partnerNamePlaceholder}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.partnerLogo}</label>
+                        <input
+                          type="text"
+                          required
+                          value={partnerForm.logo}
+                          onChange={(e) => setPartnerForm({ ...partnerForm, logo: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                          placeholder={t.admin.partnerLogoPlaceholder}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t.admin.partnerUrl}</label>
+                        <input
+                          type="text"
+                          value={partnerForm.url}
+                          onChange={(e) => setPartnerForm({ ...partnerForm, url: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-[var(--border)] focus:border-[var(--accent)] focus:outline-none transition-colors"
+                          placeholder={t.admin.partnerUrlPlaceholder}
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                        >
+                          <Save className="w-4 h-4" />
+                          {t.admin.save}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowPartnerForm(false); setEditingPartner(null); }}
+                          className="px-6 py-3 rounded-xl glass hover:bg-white/10 transition-all"
+                        >
+                          {t.admin.cancel}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {partners.length === 0 ? (
+                  <div className="glass rounded-2xl p-8 text-center text-[var(--muted)]">
+                    {t.admin.noPartners}
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {partners.map((partner) => (
+                      <div key={partner.id} className="glass rounded-2xl p-6 flex flex-col items-center text-center">
+                        <img
+                          src={partner.logo}
+                          alt={partner.name}
+                          className="w-20 h-20 rounded-xl object-cover mb-4"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100"/><text x="50" y="55" text-anchor="middle" fill="%23888" font-size="12">Logo</text></svg>';
+                          }}
+                        />
+                        <h3 className="font-semibold mb-2">{partner.name}</h3>
+                        {partner.url && (
+                          <a
+                            href={partner.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[var(--accent)] hover:underline flex items-center gap-1 mb-4"
+                          >
+                            <Link className="w-4 h-4" />
+                            {partner.url}
+                          </a>
+                        )}
+                        <div className="flex items-center gap-2 mt-auto">
+                          <button
+                            onClick={() => handleEditPartner(partner)}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+                          >
+                            <Edit3 className="w-5 h-5 text-[var(--accent)]" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePartner(partner.id)}
+                            className="p-2 rounded-xl hover:bg-white/10 transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5 text-red-400" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1279,9 +1492,93 @@ export default function App() {
         </div>
       </section>
 
+      {/* Partners Section */}
+      <section id="partners" className="py-20 lg:py-32 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent-secondary)]/5 to-transparent" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              {t.partners.title} <span className="gradient-text">{t.partners.titleHighlight}</span>
+            </h2>
+            <p className="text-[var(--muted)] max-w-2xl mx-auto">
+              {t.partners.subtitle}
+            </p>
+          </div>
+
+          {partners.length === 0 ? (
+            <div className="glass rounded-2xl p-8 text-center">
+              <Handshake className="w-12 h-12 text-[var(--muted)] mx-auto mb-4" />
+              <p className="text-[var(--muted)]">
+                {language === 'fr' ? 'Les partenaires seront bientôt annoncés.' : 'Partners will be announced soon.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {partners.map((partner, i) => (
+                <div
+                  key={partner.id}
+                  className="glass rounded-2xl p-6 flex flex-col items-center text-center hover:scale-105 transition-all duration-300 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  {partner.url ? (
+                    <a
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img
+                        src={partner.logo}
+                        alt={partner.name}
+                        className="w-16 h-16 rounded-xl object-cover mb-4 mx-auto hover:opacity-80 transition-opacity"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100" rx="12"/><text x="50" y="55" text-anchor="middle" fill="%23888" font-size="12">Logo</text></svg>';
+                        }}
+                      />
+                    </a>
+                  ) : (
+                    <img
+                      src={partner.logo}
+                      alt={partner.name}
+                      className="w-16 h-16 rounded-xl object-cover mb-4 mx-auto"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23333" width="100" height="100" rx="12"/><text x="50" y="55" text-anchor="middle" fill="%23888" font-size="12">Logo</text></svg>';
+                      }}
+                    />
+                  )}
+                  <h3 className="font-semibold text-sm">{partner.name}</h3>
+                  {partner.url && (
+                    <a
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 text-xs text-[var(--accent)] hover:underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      {language === 'fr' ? 'Visiter' : 'Visit'}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <a
+              href="#contact"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl glass hover:bg-white/10 transition-all"
+            >
+              <Handshake className="w-5 h-5 text-[var(--accent)]" />
+              {t.partners.becomePartner}
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Conditions Section */}
       <section id="conditions" className="py-20 lg:py-32 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent-secondary)]/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent)]/5 to-transparent" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
